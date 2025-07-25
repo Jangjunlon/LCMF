@@ -1,0 +1,15 @@
+{
+  "phase": "test",
+  "epoch": 0,
+  "batch_idx": 0,
+  "timestamp": "2025-07-13T06:24:41",
+  "fusion_weights_shape": [
+    32,
+    12,
+    1
+  ],
+  "fusion_weights_mean": 0.4975639879703522,
+  "fusion_weights_std": 0.06309789419174194,
+  "has_time_to_text": true,
+  "has_time_to_pred": true
+}
