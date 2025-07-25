@@ -133,18 +133,13 @@ class Dual_Stage(Exp_Basic):
         self.learning_rate3 = 1e-3
 
     def _init_fusion_model(self):
-        """初始化融合模型"""
-        time_feature_dim = self._get_feature_dim()  
-
+        time_feature_dim = self._get_feature_dim() 
   
         text_dim = self.text_embedding_dim  
 
         self.fusion_model = EnhancedMultiModalFusionClassifier(
 
         ).to(self.device)
-
-
-
         trainable_params = sum(p.numel() for p in self.fusion_model.parameters() if p.requires_grad)
 
 
@@ -321,8 +316,6 @@ class Dual_Stage(Exp_Basic):
                 batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
 
                 test = outputs
-
-
                 loss = criterion(outputs, batch_y)
                 train_loss.append(loss.item())
 
@@ -336,15 +329,12 @@ class Dual_Stage(Exp_Basic):
                     model_optim.step()
                     model_optim_mlp.step()
                     # model_optim_proj.step()
-
                 if self.fusion_model is not None:
                     llm_preds_full = train_data.get_llm_predictions(index)
 
                     if llm_preds_full is not None:
 
                         pred_len = self.args.pred_len
-
-        
                   
                         llm_preds = torch.tensor(llm_preds, dtype=torch.float32).to(self.device)
                         llm_preds = llm_preds.unsqueeze(-1)
@@ -377,12 +367,7 @@ class Dual_Stage(Exp_Basic):
                     
                     fusion_loss = fusion_criterion(weights, ideal_weights)
                     fusion_losses.append(fusion_loss.item())
-                
-
-              
                     fusion_loss.backward()
-
-
                     fusion_optim.step()
                     if (i + 1) % 100 == 0:
                         print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
@@ -414,24 +399,16 @@ class Dual_Stage(Exp_Basic):
             if fusion_pred_vali_loss_avg < best_joint_performance:
                 best_joint_performance = fusion_pred_vali_loss_avg
                 print(f"Saving best joint models with joint performance: {fusion_pred_vali_loss_avg:.7f}")
-
-
                 joint_model_path = path + '/' + 'joint_traditional_model.pth'
                 torch.save(self.model.state_dict(), joint_model_path)
-
-
                 joint_fusion_path = path + '/' + 'joint_fusion_model.pth'
                 torch.save(self.fusion_model.state_dict(), joint_fusion_path)
 
                 joint_mlp_path = path + '/' + 'joint_mlp_model.pth'
                 torch.save(self.mlp.state_dict(), joint_mlp_path)
-
-
                 with open(path + '/' + 'joint_best_epoch.txt', 'w') as f:
                     f.write(
                         f"Best joint model saved at epoch {epoch + 1} with performance {fusion_pred_vali_loss_avg:.7f}")
-
-
             fusion_model_path = path + '/' + 'fusion_checkpoint.pth'
             torch.save(self.fusion_model.state_dict(), fusion_model_path)
 
@@ -534,31 +511,20 @@ class Dual_Stage(Exp_Basic):
 
                         llm_preds = torch.tensor(llm_preds, dtype=torch.float32).to(self.device)
                         llm_preds = llm_preds.unsqueeze(-1)
-
-
-
-             
                         if llm_preds.shape != outputs.shape:
                             llm_preds = self._reshape_llm_predictions(llm_preds, outputs.shape)
 
                         batch_text_desc = prompt_emb.detach()
-
-
-      
                         trad_error = torch.abs(outputs - batch_y)
                         llm_error = torch.abs(llm_preds - batch_y)
                         ideal_weights = llm_error / (trad_error + llm_error + 1e-6)
  
                         fusion_loss = fusion_criterion(weights, ideal_weights)
                         fusion_losses.append(fusion_loss.item())
-
-
-
                         fused_prediction = weights * outputs + (1 - weights) * llm_preds
 
                         fusion_pred_loss = fusion_pred_criterion(fused_prediction, batch_y)
-                        fusion_pred_losses.append(fusion_pred_loss.item())  
-
+                        fusion_pred_losses.append(fusion_pred_loss.item()) 
 
                 pred = outputs.detach().cpu()
                 true = batch_y.detach().cpu()
@@ -572,8 +538,6 @@ class Dual_Stage(Exp_Basic):
         self.mlp.train()
 
         self.fusion_model.train()
-
-
         return total_loss, fusion_loss, fusion_pred_loss_avg
 
     def test(self, setting, test=0):
@@ -594,11 +558,9 @@ class Dual_Stage(Exp_Basic):
                 if os.path.exists(joint_traditional_path) and os.path.exists(joint_fusion_path) and os.path.exists(
                         joint_mlp_path):
                     print('Loading joint optimized models...')
-
    
                     self.model.load_state_dict(torch.load(joint_traditional_path))
                     print('Joint traditional model loaded')
-
 
                     if self.fusion_model is not None:
                         self.fusion_model.load_state_dict(torch.load(joint_fusion_path))
@@ -735,9 +697,6 @@ class Dual_Stage(Exp_Basic):
 
                     llm_preds_data = test_data.get_llm_predictions(index)
                     if llm_preds_data is not None:
-                        
-
-
                 outputs = outputs.detach().cpu().numpy()
                 batch_y = batch_y.detach().cpu().numpy()
 
@@ -784,8 +743,6 @@ class Dual_Stage(Exp_Basic):
                             input_array = test_data.inverse_transform(input_array.squeeze(0)).reshape(shape)
                         except Exception as e:
                             print(f": {e}")
-
-
                     gt = np.concatenate((input_array[0, :, -1], batch_y[0, :, -1]), axis=0)
                     pd = np.concatenate((input_array[0, :, -1], outputs[0, :, -1]), axis=0)
                     visual(gt, pd, os.path.join(folder_path, f'traditional_{i}.pdf'))
@@ -806,10 +763,6 @@ class Dual_Stage(Exp_Basic):
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
         print('test shape:', preds.shape, trues.shape)
-
-
-
-
         if fusion_preds_list:
             fusion_preds_array = np.array(fusion_preds_list)
             fusion_preds_array = fusion_preds_array.reshape(-1, fusion_preds_array.shape[-2],
@@ -823,10 +776,6 @@ class Dual_Stage(Exp_Basic):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-        # dtw calculation
-
-        dtw = -999
-
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
         f = open(self.args.save_name, 'a')
@@ -835,14 +784,9 @@ class Dual_Stage(Exp_Basic):
         f.write('\n')
         f.write('\n')
         f.close()
-
-
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('Traditional Model:')
         print('MSE: {:.4f}, MAE: {:.4f}, RMSE: {:.4f}, MAPE: {:.4f}%, MSPE: {:.4f}%'.format(mse, mae, rmse, mape, mspe))
-
-
-
         if fusion_preds_array is not None:
             fusion_mae, fusion_mse, fusion_rmse, fusion_mape, fusion_mspe = metric(fusion_preds_array, trues)
             print('Fusion Model:')
@@ -855,8 +799,6 @@ class Dual_Stage(Exp_Basic):
         f.write(
             'MSE: {:.4f}, MAE: {:.4f}, RMSE: {:.4f}, MAPE: {:.4f}%, MSPE: {:.4f}%'.format(mse, mae, rmse, mape, mspe))
         f.write('\n')
-
-
         if fusion_preds_array is not None:
             f.write('Fusion Model:\n')
             f.write('MSE: {:.4f}, MAE: {:.4f}, RMSE: {:.4f}, MAPE: {:.4f}%, MSPE: {:.4f}%'.format(
@@ -865,16 +807,12 @@ class Dual_Stage(Exp_Basic):
 
         f.write('\n')
         f.close()
-
         np.save(folder_path + 'traditional_metrics.npy', np.array([mae, mse, rmse, mape, mspe]))
         np.save(folder_path + 'traditional_pred.npy', preds)
-
-
         if fusion_preds_array is not None:
             np.save(folder_path + 'fusion_metrics.npy',
                     np.array([fusion_mae, fusion_mse, fusion_rmse, fusion_mape, fusion_mspe]))
             np.save(folder_path + 'fusion_pred.npy', fusion_preds_array)
 
         np.save(folder_path + 'true.npy', trues)
-
         return mse
