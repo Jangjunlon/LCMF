@@ -70,14 +70,14 @@ class Dual_Stage(Exp_Basic):
         else:
             if configs.llm_model == 'BERT':
                 self.bert_config = BertConfig.from_pretrained(
-                    'D:/Jang')
+                    '')
 
                 self.bert_config.num_hidden_layers = configs.llm_layers
                 self.bert_config.output_attentions = True
                 self.bert_config.output_hidden_states = True
                 try:
                     self.llm_model = BertModel.from_pretrained(
-                        'D:/Jang',
+                        '',
                         trust_remote_code=True,
                         local_files_only=True,
                         config=self.bert_config,
@@ -85,7 +85,7 @@ class Dual_Stage(Exp_Basic):
                 except EnvironmentError:  # downloads model from HF is not already done
                     print("Local model files not found. Attempting to download...")
                     self.llm_model = BertModel.from_pretrained(
-                        'D:/Jang',
+                        '',
                         trust_remote_code=True,
                         local_files_only=False,
                         config=self.bert_config,
@@ -93,14 +93,14 @@ class Dual_Stage(Exp_Basic):
 
                 try:
                     self.tokenizer = BertTokenizer.from_pretrained(
-                        'D:/Jang',
+                        '',
                         trust_remote_code=True,
                         local_files_only=True
                     )
                 except EnvironmentError:  # downloads the tokenizer from HF if not already done
                     print("Local tokenizer files not found. Atempting to download them..")
                     self.tokenizer = BertTokenizer.from_pretrained(
-                        'D:/Jang',
+                        '',
                         trust_remote_code=True,
                         local_files_only=False
                     )
@@ -126,9 +126,7 @@ class Dual_Stage(Exp_Basic):
             self.weight1.weight.requires_grad = True
             self.weight2.weight.requires_grad = True
 
-        # self.tokenizer=self.tokenizer.to(self.device)
-        self.mlp = self.mlp.to(self.device)
-        # self.mlp_proj=self.mlp_proj.to(self.device)
+
         self.learning_rate2 = 1e-2
         self.learning_rate3 = 1e-3
 
